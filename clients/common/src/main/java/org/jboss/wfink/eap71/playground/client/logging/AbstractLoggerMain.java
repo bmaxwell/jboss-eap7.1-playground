@@ -1,6 +1,11 @@
 package org.jboss.wfink.eap71.playground.client.logging;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -8,12 +13,12 @@ import java.util.logging.Logger;
 
 /**
  * Base class for client test to initialize logging.
- * 
+ *
  * @author <a href="mailto:wfink@redhat.com">Wolf-Dieter Fink</a>
  */
 public abstract class AbstractLoggerMain {
 	public static final Logger log = Logger.getLogger(AbstractLoggerMain.class.getName());
-	
+
 	static private void setLogging(int logging) {
 		Level logLevel = getLogLevel(logging%10);
 
@@ -22,13 +27,13 @@ public abstract class AbstractLoggerMain {
 		logLevel = getLogLevel((logging/10)%10);
 		Logger.getLogger("org.xnio").setLevel(logLevel);
 		Logger.getLogger("org.jboss.remoting").setLevel(logLevel);	//classes are remoting3
-		
+
 		logLevel = getLogLevel((logging/100)%10);
 		Logger.getLogger("org.jboss.ejb.client").setLevel(logLevel);
-		
+
 		logLevel = getLogLevel((logging/1000)%10);
 		Logger.getLogger("org.wildfly").setLevel(logLevel);
-		
+
 //		Logger.getLogger("org.jboss.invocation").setLevel(logLevel);
 
 		// change default ConsoleHandler
@@ -42,7 +47,7 @@ public abstract class AbstractLoggerMain {
 		handler.setLevel(Level.ALL);
 		root.addHandler(handler);
 	}
-	
+
 	static private Level getLogLevel(int level) {
 		switch (level) {
 		case 0:
@@ -61,11 +66,11 @@ public abstract class AbstractLoggerMain {
 			return Level.FINEST;
 		}
 	}
-	
+
 	public static final void checkArgs(String[] args) {
 		ArrayList<String> newArgs = new ArrayList<>();
 		boolean isLoggingSet = false;
-		
+
 		for (int i = 0; i < args.length; i++) {
 			switch (args[i]) {
 			case "-log":
@@ -79,8 +84,20 @@ public abstract class AbstractLoggerMain {
 		}
 		if(newArgs.size() > 0)
 			log.severe("not all arguments parsed " + newArgs);
-		
+
 		if(!isLoggingSet)
 			setLogging(9);
 	}
+
+    public static void listConfiguration(PrintStream ps, Properties p) {
+        Enumeration<String> names = (Enumeration<String>) p.propertyNames();
+        Set<String> namesSet = new TreeSet<>();
+        while(names.hasMoreElements()) {
+            namesSet.add(names.nextElement());
+        }
+        for(String name : namesSet) {
+            ps.printf("%s=%s\n", name, p.getProperty(name));
+        }
+    }
+
 }

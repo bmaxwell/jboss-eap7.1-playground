@@ -11,6 +11,7 @@ fi
 
 CLASSPATH="clients/InitialContext/target/eap71-playground-clients-InitialContext.jar:clients/common/target/eap71-playground-clients-common.jar:server/ejb/target/eap71-playground-server-ejb-client.jar"
 CLASSPATH="$CLASSPATH:$JBOSS_HOME/bin/client/jboss-client.jar"
+CLASSPATH="$CLASSPATH:$JBOSS_HOME/bin/client/jboss-cli-client.jar"
 
 
 echo $CLASSPATH

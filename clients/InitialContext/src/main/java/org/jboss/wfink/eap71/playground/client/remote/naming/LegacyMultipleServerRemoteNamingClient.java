@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.jboss.wfink.eap71.playground.client.remote.naming;
 
@@ -12,7 +12,6 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.jboss.naming.remote.client.InitialContextFactory;
 import org.jboss.wfink.eap71.playground.Simple;
 import org.jboss.wfink.eap71.playground.client.logging.AbstractLoggerMain;
 
@@ -29,23 +28,43 @@ import org.jboss.wfink.eap71.playground.client.logging.AbstractLoggerMain;
  */
 public class LegacyMultipleServerRemoteNamingClient extends AbstractLoggerMain {
 	private static final Logger log = Logger.getLogger(LegacyMultipleServerRemoteNamingClient.class.getName());
-	
+
 	public static void main(String[] args) throws NamingException {
 		checkArgs(args);
 
+		System.out.println("jboss-ejb-client.properties: " + Thread.currentThread().getContextClassLoader().getResource("jboss-ejb-client.properties"));
+
 		Properties p = new Properties();
-		
-		p.put(Context.INITIAL_CONTEXT_FACTORY, InitialContextFactory.class.getName());
-		p.put(Context.PROVIDER_URL, "http-remoting://localhost:8080,http-remoting://localhost:8180");
+
+//		p.put(Context.INITIAL_CONTEXT_FACTORY, InitialContextFactory.class.getName());
+//		p.put(Context.INITIAL_CONTEXT_FACTORY, "org.jboss.naming.remote.client.InitialContextFactory");
+//		p.put(Context.PROVIDER_URL, "http-remoting://localhost:8080,http-remoting://localhost:8180");
+
+//        WildflyInitialContextFactory("remote+http", "org.wildfly.naming.client.WildFlyInitialContextFactory"),
+        p.put(Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
+        p.put(Context.PROVIDER_URL, "remote+http://localhost:8080,remote+http://localhost:8180");
+
+
+
+//		p.put(Context.PROVIDER_URL, "http-remoting://localhost:8180,http-remoting://localhost:8080");
+//		p.put(Context.PROVIDER_URL, "http-remoting://localhost:8180");
+
+//		http-remoting://localhost:8080,http-remoting://localhost:8180
+//		http-remoting://localhost:8180,http-remoting://localhost:9180,http-remoting://localhost:8080,http-remoting://localhost:9080
+		p.put("java.naming.factory.url.pkgs", "org.jboss.ejb.client.naming");
+
+
 		p.put(Context.SECURITY_PRINCIPAL, "user1");
 		p.put(Context.SECURITY_CREDENTIALS, "user1+");
-		p.put("jboss.naming.client.ejb.context", true);
+		p.put("jboss.naming.client.ejb.context", "true");
+//		p.put("jboss.naming.client.ejb.context", true);
+		listConfiguration(System.out, p);
 		InitialContext ic = new InitialContext(p);
-		
+
 		final String lookup = "EAP71-PLAYGROUND-server/ejb/SimpleBean!" + Simple.class.getName();
 		Simple proxy = (Simple) ic.lookup(lookup);
 		log.fine("Proxy after lookup is : " + proxy);
-		
+
 		HashSet<String> serverList = new HashSet<>();
 
 		log.info("Try to invoke SimpleBean with server @8080 @8180");
@@ -57,7 +76,7 @@ public class LegacyMultipleServerRemoteNamingClient extends AbstractLoggerMain {
 		} catch (Exception e) {
 			log.severe("Invocation failed! " + e.getMessage());
 		}
-		
+
 		if(serverList.size() > 1) {
 			log.info("Server should be part of a cluster as the invocation was executed on the following servers : " + serverList);
 		}else if(serverList.size() == 1) {
